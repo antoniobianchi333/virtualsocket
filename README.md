@@ -39,12 +39,13 @@ mkfifo /tmp/out
 ```
 #### connecting
 ```python
-#suppose that your binary is listening on 127.0.0.1:7777
+#suppose that your binary has been opened with: ./my_std_binary < /tmp/out > /tmp/in
 vs = VirtualSocket(StdSocket("/tmp/in","/tmp/out"))
 vs.connect()
 ```
 
 ### communicating
+#### Send and receive data
 ```python
 #send data
 vs.send("datadatadata\n")
@@ -61,7 +62,7 @@ data = vs.recv_time(2.0)
 data = vs.recv_all() #you should never use recv_all if you want reliable code!
 ```
 
-Exceptions:
+#### Exceptions
 ```python
 #In case of communication problems (e.g., socket disconnected) or interrupted recv/send a CommunicationException is generated
 from virtualsocket.virtualsocket import CommunicationException
@@ -73,9 +74,9 @@ except CommunicationException, e:
     data_received_so_far = e.data
 ```
 
-Advanced features:
+#### Advanced features
 ```python
-#open iteractive shell
+#open interactive shell
 vs.interact()
 #get the entire communication history
 vs.flow()

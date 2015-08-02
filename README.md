@@ -6,7 +6,7 @@ a nice library to interact with binaries (mainly developed for CTF exploits)
 
 ```bash
 git clone git@github.com:antoniobianchi333/virtualsocket.git
-pip install -e virtualsocket
+pip install -e virtualsocket/
 ```
 
 ## usage
@@ -37,6 +37,22 @@ mkfifo /tmp/in
 mkfifo /tmp/out
 ./my_std_binary < /tmp/out > /tmp/in
 ```
+If you need to use GDB:
+```bash
+gdb ./my_std_binary
+r < /tmp/out > /tmp/in
+```
+If programmed correctly, std binaries should flush the pipes correctly (by either calling _flush_ or setting the buffering properly using _setvbuf_).
+
+In case of problems, you can try:
+```bash
+unbuffer ./my_std_binary < /tmp/out > /tmp/in
+```
+or
+```bash
+stdbuf -i 0 -o 0 -e 0 ./my_std_binary < /tmp/out > /tmp/in
+```
+
 #### connecting
 ```python
 #suppose that your binary has been opened with: ./my_std_binary < /tmp/out > /tmp/in
@@ -49,14 +65,19 @@ vs.connect()
 ```python
 #send data
 vs.send("datadatadata\n")
+
 #receive 10 bytes
 data = vs.recv(10)
+
 #receive until the string "endofmessage"
 data = vs.recv_until("endofmessage")
+
 #receive until the word FLAG followed by three digits
 data = vs.recv_until_regex(".*FLAG\d\d\d")
+
 #receive everything for 2 seconds
 data = vs.recv_time(2.0)
+
 #receive "all":
 #wait until we do not recv any new data for 0.2 seconds, blocking until "something" is received
 data = vs.recv_all() #you should never use recv_all if you want reliable code!
@@ -78,12 +99,14 @@ except CommunicationException, e:
 ```python
 #open interactive shell
 vs.interact()
+
 #get the entire communication history
 vs.flow()
+
 #CTRL+C
 '''
-At any time, while blocking in a recv, you can press CTRL+C.
-Data received so far will be printed
+At any time, while blocked in a recv, you can press CTRL+C.
+Data received between the last recv and CTRL+C will be printed.
 '''
 
 

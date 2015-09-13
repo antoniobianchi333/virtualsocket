@@ -91,7 +91,7 @@ if __name__ == "__main__":
                 if not data:
                     break
                 full_data += data
-            print full_data
+            #print full_data
 
             cmd = parse_and_verify_cmd(full_data,nounce,args.password)
             if cmd == None:

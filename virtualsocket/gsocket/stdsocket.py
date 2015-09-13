@@ -22,6 +22,7 @@ class StdSocket():
     def get_exception_type(self):
         return OSError
 
+
     def get_fds(self):
         return self.fin,self.fout
 
@@ -29,20 +30,22 @@ class StdSocket():
         self.fin = os.open(self.fin_name,os.O_RDONLY|os.O_NONBLOCK)
         self.fout = os.open(self.fout_name,os.O_WRONLY)
 
+
     def disconnect(self):
         os.close(self.fin)
         ps.close(self.fout)
+
 
     def reset(self):
         self.disconnect()
         self.connect()
 
+
     def recv(self,tlen):
         return os.read(self.fin,tlen)
 
+
     def send(self,buf):
         os.write(self.fout,buf)
-
-
 
 

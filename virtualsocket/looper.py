@@ -12,11 +12,12 @@ DEFAULT_PASSWORD = "password"
 
 
 class Looper():
-    def __init__(self,code,port=DEFAULT_PORT,ip=DEFAULT_IP,password=DEFAULT_PASSWORD):
+    def __init__(self,code,port=DEFAULT_PORT,ip=DEFAULT_IP,password=DEFAULT_PASSWORD,sleep_time=0.0):
         self.port = port
         self.ip = ip
         self.password = password
         self.code = code
+        self.sleep_time = sleep_time
 
 
     def invoke(self):
@@ -24,10 +25,9 @@ class Looper():
         s.connect((self.ip,self.port))
         s.sendall(self.code)
         mac = hmac.new(self.password,self.code,hashlib.sha256).digest().encode('hex')
-        s.sendall("\n"+mac)
+        s.sendall("\n")
+        s.sendall(mac)
         s.close()
-        #TODO sleep is bad, but a different solution is not easy
-        #a solution may be a blocking try-to-connect loop
-        time.sleep(2.0)
+        time.sleep(self.sleep_time)
 
 

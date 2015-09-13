@@ -90,7 +90,6 @@ if __name__ == "__main__":
                     break
                 full_data += data
 
-            print full_data
             cmd = parse_and_verify_cmd(full_data,args.password)
             if cmd == None:
                 print "* invalid command received"

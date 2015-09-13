@@ -14,32 +14,54 @@ class CommunicationException(Exception):
 
 
 class VirtualSocket(object):
-    def __init__(self,gsocket,auto_flush=True,looper=None):
+    def __init__(self,gsocket,auto_flush=True,looper=None,looping_connect=None):
         self.gsocket = gsocket
         self.flow = []
         self.auto_flush = auto_flush
         self.tsent = ""
         self.send_buffer = ""
+
         self.looper = looper
+        if looping_connect != None:
+            self.looping_connect = looping_connect
+        else:
+            if self.looper != None:
+                self.looping_connect = True
+
 
     def connect(self):
         if self.looper != None:
             self.looper.invoke()
-        self.gsocket.connect()
+        if self.looping_connect:
+            while True:
+                try:
+                    #gsocket.connect either blocks or raises exception
+                    self.gsocket.connect()
+                except self.gsocket.get_exception_type():
+                    time.sleep(0.1)
+                else:
+                    break
+        else:
+            self.gsocket.connect()
+
 
     def log_send(self,data):
         self.tsent += data
+
 
     def log_flush(self):
         self.flow.append(("send",self.tsent))
         self.tsent = ""
 
+
     def log_recv(self,data):
         self.flow.append(("recv",data))
+
 
     def handle_exception(self,msg,data):
         self.log_recv(data)
         raise CommunicationException(msg,data)
+
 
     #inspired by telnet.interact()
     def interact(self):
@@ -144,6 +166,7 @@ class VirtualSocket(object):
         self.log_recv(data) 
         return data
 
+
     def recv_until_regex(self,regex):
         if type(regex) == str:
             com = re.compile(regex,re.DOTALL)
@@ -181,6 +204,7 @@ class VirtualSocket(object):
 
         self.log_recv(data) 
         return data
+
 
     #this is bad: do not use it! :-)
     #wait until we do not recv any new data for 0.2 seconds
@@ -274,8 +298,5 @@ class VirtualSocket(object):
             raise CommunicationException("Exception while sending data",repr(self.send_buffer))
         self.send_buffer = ""
         time.sleep(sleep_time)
-
-
-
 
 

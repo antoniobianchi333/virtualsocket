@@ -29,20 +29,22 @@ def wait_socket_and_process(s,process):
         rr,_,_ = select.select([s],[],[],0.1)
         if len(rr)>0:
             conn, addr = rr[0].accept()
+            nounce = os.urandom(16).encode('hex')
+            conn.sendall(nounce)
             if process != None:
                 os.killpg(process.pid,9)
                 process.poll()
                 become_tty_fg(False)
                 subprocess.Popen("reset",shell=True).communicate()
                 print "* subprocess killed"
-            return conn,addr
+            return conn,addr,nounce
         elif (process != None and process.poll() != None):
             become_tty_fg(False)
             process = None
             print "* subprocess terminated"
 
-#TODO with this implementation, replay attacks are still possible
-def parse_and_verify_cmd(tstr,password):
+
+def parse_and_verify_cmd(tstr,nounce,password):
     def constant_time_compare(val1, val2):
         #from django source code
         if len(val1) != len(val2):
@@ -53,9 +55,9 @@ def parse_and_verify_cmd(tstr,password):
         return result == 0
 
 
-    cmd,_,remote_mac = tstr.partition("\n")
+    cmd,remote_nounce,remote_mac = tstr.split("\n")
     local_mac = hmac.new(password,cmd,hashlib.sha256).digest().encode('hex')
-    if constant_time_compare(remote_mac,local_mac):
+    if constant_time_compare(remote_mac,local_mac) and nounce == remote_nounce:
         return cmd
     else:
         return None
@@ -65,7 +67,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Looper process to be used in conjunction with virtulsocket library.')
     parser.add_argument('--ip',type=str,help='ip on which the looper will listen',default=DEFAULT_IP)
     parser.add_argument('--port',type=int,help='port on which the looper will listen',default=DEFAULT_PORT)
-    parser.add_argument('--password',type=str,help='password',default=DEFAULT_PASSWORD)
+    parser.add_argument('--password',type=str,help='password used to authenticate a Looper instance',default=DEFAULT_PASSWORD)
     args = parser.parse_args()
 
     if args.password == DEFAULT_PASSWORD:
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     try:
         while True:
             print "*** waiting from new connections on:",args.ip,str(args.port)
-            conn,addr = wait_socket_and_process(s,process)
+            conn,addr,nounce = wait_socket_and_process(s,process)
             print "*** new connection from",addr
 
             full_data = ""
@@ -89,8 +91,9 @@ if __name__ == "__main__":
                 if not data:
                     break
                 full_data += data
+            print full_data
 
-            cmd = parse_and_verify_cmd(full_data,args.password)
+            cmd = parse_and_verify_cmd(full_data,nounce,args.password)
             if cmd == None:
                 print "* invalid command received"
                 continue

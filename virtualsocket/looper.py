@@ -17,13 +17,20 @@ class Looper():
         self.ip = ip
         self.password = password
         self.code = code
+        if "\n" in self.code:
+            raise Exception("new lines are not allowed in looper's code")
         self.sleep_time = sleep_time
 
 
     def invoke(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.ip,self.port))
+        nounce = ""
+        for i in xrange(16*2):
+            nounce += s.recv(1)
         s.sendall(self.code)
+        s.sendall("\n")
+        s.sendall(nounce)
         mac = hmac.new(self.password,self.code,hashlib.sha256).digest().encode('hex')
         s.sendall("\n")
         s.sendall(mac)

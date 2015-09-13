@@ -14,14 +14,17 @@ class CommunicationException(Exception):
 
 
 class VirtualSocket(object):
-    def __init__(self,gsocket,auto_flush=True):
+    def __init__(self,gsocket,auto_flush=True,looper=None):
         self.gsocket = gsocket
         self.flow = []
         self.auto_flush = auto_flush
         self.tsent = ""
         self.send_buffer = ""
+        self.looper = looper
 
     def connect(self):
+        if self.looper != None:
+            self.looper.invoke()
         self.gsocket.connect()
 
     def log_send(self,data):

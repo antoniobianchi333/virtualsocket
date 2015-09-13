@@ -5,10 +5,13 @@ import os
 class StdSocket():
 
     #auto spawn mode with params and internal pipe
-    def __init__(self,fin_name,fout_name,create_file=False):
+    def __init__(self,fin_name,fout_name,create_file=True):
         if create_file:
             try:
                 os.mkfifo(fin_name)
+            except OSError:
+                pass
+            try:
                 os.mkfifo(fout_name)
             except OSError:
                 pass
@@ -24,7 +27,7 @@ class StdSocket():
 
     def connect(self):
         self.fin = os.open(self.fin_name,os.O_RDONLY|os.O_NONBLOCK)
-        self.fout = os.open(self.fout_name,os.O_WRONLY|os.O_NONBLOCK)
+        self.fout = os.open(self.fout_name,os.O_WRONLY)
 
     def disconnect(self):
         os.close(self.fin)

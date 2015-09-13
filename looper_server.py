@@ -29,14 +29,14 @@ def wait_socket_and_process(s,process):
         rr,_,_ = select.select([s],[],[],0.1)
         if len(rr)>0:
             conn, addr = rr[0].accept()
-            nounce = os.urandom(16).encode('hex')
-            conn.sendall(nounce)
             if process != None:
                 os.killpg(process.pid,9)
                 process.poll()
                 become_tty_fg(False)
                 subprocess.Popen("reset",shell=True).communicate()
                 print "* subprocess killed"
+            nounce = os.urandom(16).encode('hex')
+            conn.sendall(nounce)
             return conn,addr,nounce
         elif (process != None and process.poll() != None):
             become_tty_fg(False)

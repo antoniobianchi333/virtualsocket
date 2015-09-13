@@ -5,7 +5,7 @@ a nice library to interact with binaries (mainly developed for CTF exploits)
 
 
 ```bash
-git clone git@github.com:antoniobianchi333/virtualsocket.git
+git clone https://github.com/antoniobianchi333/virtualsocket.git
 pip install -e virtualsocket/
 ```
 

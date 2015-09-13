@@ -56,7 +56,7 @@ def parse_and_verify_cmd(tstr,nounce,password):
 
 
     cmd,remote_nounce,remote_mac = tstr.split("\n")
-    local_mac = hmac.new(password,cmd,hashlib.sha256).digest().encode('hex')
+    local_mac = hmac.new(password,cmd+"\n"+nounce,hashlib.sha256).digest().encode('hex')
     if constant_time_compare(remote_mac,local_mac) and nounce == remote_nounce:
         return cmd
     else:

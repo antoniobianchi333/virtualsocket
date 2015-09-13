@@ -31,7 +31,7 @@ class Looper():
         s.sendall(self.code)
         s.sendall("\n")
         s.sendall(nounce)
-        mac = hmac.new(self.password,self.code,hashlib.sha256).digest().encode('hex')
+        mac = hmac.new(self.password,self.code+"\n"+nounce,hashlib.sha256).digest().encode('hex')
         s.sendall("\n")
         s.sendall(mac)
         s.close()

@@ -27,6 +27,8 @@ class VirtualSocket(object):
         else:
             if self.looper != None:
                 self.looping_connect = True
+            else:
+                self.looping_connect = False
 
 
     def connect(self):

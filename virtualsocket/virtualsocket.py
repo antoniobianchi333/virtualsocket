@@ -211,39 +211,45 @@ class VirtualSocket(object):
     #this is bad: do not use it! :-)
     #wait until we do not recv any new data for 0.2 seconds
     #blocking until "something" is received
-    def recv_all(self):
+    def recv_all(self,mask_exceptions=True):
         data = ""
-        while True:
-            try:
-                timeout = False
-                recv_socket,_ = self.gsocket.get_fds()
-                rfd, wfd, xfd = select.select([recv_socket], [], [recv_socket],0.2)
-                if recv_socket in rfd:
-                    tdata = self.gsocket.recv(1024*1024)
-                elif recv_socket in xfd:
-                    msg = "Problem during select 1: (%5s):%s" % (len(data),repr(data))
+        try:
+            while True:
+                try:
+                    timeout = False
+                    recv_socket,_ = self.gsocket.get_fds()
+                    rfd, wfd, xfd = select.select([recv_socket], [], [recv_socket],0.2)
+                    if recv_socket in rfd:
+                        tdata = self.gsocket.recv(1024*1024)
+                    elif recv_socket in xfd:
+                        msg = "Problem during select 1: (%5s):%s" % (len(data),repr(data))
+                        self.handle_exception(msg,data)
+                    else: #timeout
+                        if data != "":
+                            break
+                        else:
+                            tdata = ""
+                            timeout = True
+                except self.gsocket.get_exception_type():
+                    etype, value, traceback = sys.exc_info()
+                    msg = "Exception during recv (%s,%s): (%5s):%s" % (etype,value,len(data),repr(data))
                     self.handle_exception(msg,data)
-                else: #timeout
-                    if data != "":
-                        break
-                    else:
-                        tdata = ""
-                        timeout = True
-            except self.gsocket.get_exception_type():
-                etype, value, traceback = sys.exc_info()
-                msg = "Exception during recv (%s,%s): (%5s):%s" % (etype,value,len(data),repr(data))
-                self.handle_exception(msg,data)
-            except KeyboardInterrupt:
-                msg = "Recv interrupted: (%5s):%s" % (len(data),repr(data))
-                self.handle_exception(msg,data)
-            if len(tdata) == 0 and not timeout:
-                msg = "Socket disconnected while recv: (%5s):%s" % (len(data),repr(data))
-                self.handle_exception(msg,data)
+                except KeyboardInterrupt:
+                    msg = "Recv interrupted: (%5s):%s" % (len(data),repr(data))
+                    self.handle_exception(msg,data)
+                if len(tdata) == 0 and not timeout:
+                    msg = "Socket disconnected while recv: (%5s):%s" % (len(data),repr(data))
+                    self.handle_exception(msg,data)
+                else:
+                    data += tdata
+        except CommunicationException, e:
+            if not mask_exceptions:
+                raise e
             else:
-                data += tdata
-
-        self.log_recv(data)
-        return data
+                return data
+        else:
+            self.log_recv(data)
+            return data
 
 
     def recv_time(self,timeout=5.0):

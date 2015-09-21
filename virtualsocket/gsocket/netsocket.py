@@ -22,7 +22,7 @@ class NetSocket():
 
 
     def disconnect(self):
-        self.socket.shutdown()
+        self.socket.close()
 
 
     def reset(self):
